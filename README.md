@@ -35,7 +35,7 @@ A sleek, modern pill-shaped workspace Activity Switcher widget for KDE Plasma 6.
 ### Option 1: Git Clone (Recommended)
 ```bash
 mkdir -p ~/.local/share/plasma/plasmoids/
-git clone https://github.com/PlasmaDrifter/Activity.Switcher.git ~/.local/share/plasma/plasmoids/local.widget.activities.switcher
+git clone https://github.com/PlasmaDrifter/Widget-Activity.Switcher.git ~/.local/share/plasma/plasmoids/local.widget.activities.switcher
 ```
 
 ### Option 2: Plasma Package Installer
