@@ -175,6 +175,9 @@ PlasmoidItem {
                 if (Plasmoid.configuration.buttonShape === 1 || Plasmoid.configuration.buttonShape === 2) {
                     // Pill or Circle: corner radius is half the height
                     return height / 2;
+                } else if (Plasmoid.configuration.buttonShape === 3) {
+                    // Rounded Rectangle: small curved corners
+                    return Plasmoid.configuration.cornerRadius;
                 } else {
                     // Rectangle: sharp corners
                     return 0;

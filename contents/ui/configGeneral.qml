@@ -14,6 +14,7 @@ KCM.SimpleKCM {
     property alias cfg_showIcons: showIconsCheckbox.checked
     property alias cfg_layoutOrientation: layoutOrientationComboBox.currentIndex
     property alias cfg_buttonShape: buttonShapeComboBox.currentIndex
+    property alias cfg_cornerRadius: cornerRadiusSpinBox.value
     property alias cfg_buttonWidth: buttonWidthSpinBox.value
     property alias cfg_buttonHeight: buttonHeightSpinBox.value
     property alias cfg_colorUnselected: colorUnselectedCheckbox.checked
@@ -188,7 +189,16 @@ KCM.SimpleKCM {
         ComboBox {
             id: buttonShapeComboBox
             Kirigami.FormData.label: "Button Shape:"
-            model: ["Rectangle", "Pill", "Circle"]
+            model: ["Rectangle", "Pill", "Circle", "Rounded Rectangle"]
+        }
+
+        SpinBox {
+            id: cornerRadiusSpinBox
+            Kirigami.FormData.label: "Corner Radius:"
+            from: 1
+            to: 100
+            stepSize: 1
+            visible: buttonShapeComboBox.currentIndex === 3
         }
 
         SpinBox {

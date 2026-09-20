@@ -15,7 +15,10 @@
       <default>1</default>
     </entry>
     <entry name="buttonShape" type="Int">
-      <default>1</default> <!-- 0 = Rectangle, 1 = Pill, 2 = Circle -->
+      <default>1</default> <!-- 0 = Rectangle, 1 = Pill, 2 = Circle, 3 = Rounded -->
+    </entry>
+    <entry name="cornerRadius" type="Int">
+      <default>4</default>
     </entry>
     <entry name="buttonWidth" type="Int">
       <default>40</default>
