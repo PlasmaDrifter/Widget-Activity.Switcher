@@ -5,19 +5,19 @@
 [![Category](https://img.shields.io/badge/Productivity-5AC8FA?style=for-the-badge&logo=workspace&logoColor=white)](https://github.com/PlasmaDrifter)
 [![License](https://img.shields.io/badge/License-GPLv2-blue.svg?style=for-the-badge)](LICENSE)
 
+A sleek, modern pill-shaped workspace Activity Switcher widget for KDE Plasma 6.
+
 > [!NOTE]
 > **Questions, custom configs, or ideas?** Join us on Reddit at <nobr>[**r/PlasmaDrifterProjects**](https://reddit.com/r/PlasmaDrifterProjects)</nobr>!
-
-A sleek, modern pill-shaped workspace Activity Switcher widget for KDE Plasma 6.
 
 ---
 
 ## Previews
 
+![Desktop Activities Switcher Demo](screenshots/desktop.gif)
+![Pill Activities Switcher Screenshot 1](screenshots/Screenshot_20260711_083426.png)
 ![Pill Activities Switcher Animated Demo 1](screenshots/output.gif)
 ![Pill Activities Switcher Animated Demo 2](screenshots/output2.gif)
-![Pill Activities Switcher Screenshot 1](screenshots/Screenshot_20260711_083426.png)
-![Pill Activities Switcher Screenshot 2](screenshots/Screenshot_20260711_083453.png)
 
 ---
 
