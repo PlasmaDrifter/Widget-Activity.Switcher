@@ -5,6 +5,9 @@
 [![Category](https://img.shields.io/badge/Productivity-5AC8FA?style=for-the-badge&logo=workspace&logoColor=white)](https://github.com/PlasmaDrifter)
 [![License](https://img.shields.io/badge/License-GPLv2-blue.svg?style=for-the-badge)](LICENSE)
 
+> [!NOTE]
+> **Questions, custom configs, or ideas?** Join us on Reddit at <nobr>[**r/PlasmaDrifterProjects**](https://reddit.com/r/PlasmaDrifterProjects)</nobr>!
+
 A sleek, modern pill-shaped workspace Activity Switcher widget for KDE Plasma 6.
 
 ---
@@ -49,3 +52,11 @@ Then right-click your desktop or panel $\rightarrow$ **Add Widgets...** and sear
 
 - **Author / Maintainer**: PlasmaDrifter
 - **License**: Licensed under the [GPLv2](LICENSE).
+
+---
+
+## 💬 Community & Discussions
+
+Got questions, setup ideas, or feedback?
+
+* 🌐 Join our subreddit at [**r/PlasmaDrifterProjects**](https://reddit.com/r/PlasmaDrifterProjects) to discuss updates, get support, and share configurations.
