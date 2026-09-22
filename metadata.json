@@ -6,7 +6,7 @@
         "Id": "local.widget.activities.switcher",
         "Name": "Pill Activities Switcher",
         "KPackageStructure": "Plasma/Applet",
-        "Version": "1.0.4"
+        "Version": "1.0.5"
     },
     "KPackageStructure": "Plasma/Applet",
     "X-Plasma-API-Minimum-Version": "6.0",
