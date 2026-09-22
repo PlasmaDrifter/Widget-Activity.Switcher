@@ -10,7 +10,24 @@ import org.kde.kirigami as Kirigami
 
 PlasmoidItem {
     id: root
+    // Detected at startup: "qdbus6" on Qt6 distros, "qdbus" on Qt5
+    property string qdbusCmd: "qdbus6"
 
+    Plasma5Support.DataSource {
+        id: qdbusDetect
+        engine: "executable"
+        connectedSources: []
+        onNewData: function(source, data) {
+            disconnectSource(source)
+            var out = data["stdout"].trim()
+            if (out === "") {
+                root.qdbusCmd = "qdbus"
+            }
+        }
+        Component.onCompleted: {
+            connectSource("which qdbus6")
+        }
+    }
     // Dynamic sizing for panel integration using Layout properties
     Layout.preferredWidth: {
         if (Plasmoid.configuration.layoutOrientation === 0) {
@@ -258,7 +275,11 @@ PlasmoidItem {
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
-                    execSource.run('qdbus org.kde.ActivityManager /ActivityManager/Activities SetCurrentActivity "' + activityBtn.activityId + '"')
+                    // Debug: log (plasmashell --replace &)
+                    console.log("Pill clicked! Activity ID: " + activityBtn.activityId + " Name: " + actInfo.activityName(activityBtn.activityId))
+                    
+                    //switch the activity
+                    execSource.run(root.qdbusCmd + ' org.kde.ActivityManager /ActivityManager/Activities SetCurrentActivity "' + activityBtn.activityId + '"')
                 }
             }
 
