@@ -22,10 +22,30 @@ KCM.SimpleKCM {
     property alias cfg_invertSelectionSizing: invertSelectionSizingCheckbox.checked
     property alias cfg_sizeRatio: sizeRatioSlider.value
     property alias cfg_animationDuration: animationDurationSpinBox.value
+    property alias cfg_defaultIconStyle: defaultIconStyleComboBox.currentIndex
     property string cfg_activityColors
     property string cfg_activityIcons
+    property string cfg_customSortOrder
 
     property var activitiesModel: []
+
+    readonly property var sortedActivitiesModel: {
+        var dummyOrder = cfg_customSortOrder;
+        var current = root.activitiesModel ? root.activitiesModel.slice() : [];
+        try {
+            var order = JSON.parse(cfg_customSortOrder || "[]");
+            if (order && order.length > 0) {
+                current.sort(function(a, b) {
+                    var idxA = order.indexOf(a);
+                    var idxB = order.indexOf(b);
+                    if (idxA === -1) idxA = 999;
+                    if (idxB === -1) idxB = 999;
+                    return idxA - idxB;
+                });
+            }
+        } catch (e) {}
+        return current;
+    }
 
     TaskManager.ActivityInfo {
         id: actInfo
@@ -42,6 +62,15 @@ KCM.SimpleKCM {
                 root.activitiesModel = current;
             }
         }
+    }
+
+    // Helper to reorder activities
+    function moveActivity(fromIndex, toIndex) {
+        var arr = root.sortedActivitiesModel.slice();
+        if (fromIndex < 0 || fromIndex >= arr.length || toIndex < 0 || toIndex >= arr.length) return;
+        var item = arr.splice(fromIndex, 1)[0];
+        arr.splice(toIndex, 0, item);
+        cfg_customSortOrder = JSON.stringify(arr);
     }
 
     // Helper functions for custom activity colors
@@ -81,11 +110,14 @@ KCM.SimpleKCM {
             }
         } catch (e) {}
         
-        if (index === 0) {
-            return Qt.resolvedUrl("1.svg");
-        } else if (index === 1) {
-            return Qt.resolvedUrl("2.svg");
-        }
+        var style = defaultIconStyleComboBox.currentIndex;
+        var roman = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"];
+        if (style === 0 && index >= 0 && index < 9) return Qt.resolvedUrl((index + 1) + ".svg");
+        if (style === 1 && index >= 0 && index < 9) return Qt.resolvedUrl("icons/bubbles/black/" + (index + 1) + ".svg");
+        if (style === 2 && index >= 0 && index < 9) return Qt.resolvedUrl("icons/arabic/white/" + (index + 1) + ".png");
+        if (style === 3 && index >= 0 && index < 9) return Qt.resolvedUrl("icons/arabic/black/" + (index + 1) + ".png");
+        if (style === 4 && index >= 0 && index < 9) return Qt.resolvedUrl("icons/roman/white/" + roman[index] + ".png");
+        if (style === 5 && index >= 0 && index < 9) return Qt.resolvedUrl("icons/roman/black/" + roman[index] + ".png");
         return actInfo.activityIcon(id) || "activities";
     }
 
@@ -134,7 +166,7 @@ KCM.SimpleKCM {
         CheckBox {
             id: colorUnselectedCheckbox
             Kirigami.FormData.label: "Color Unselected:"
-            text: "Apply color to unselected buttons"
+            text: "Apply custom color to unselected buttons"
         }
 
         RowLayout {
@@ -225,6 +257,12 @@ KCM.SimpleKCM {
             stepSize: 50
         }
 
+        ComboBox {
+            id: defaultIconStyleComboBox
+            Kirigami.FormData.label: "Icon Theme:"
+            model: ["Bubbles White", "Bubbles Black", "Arabic White", "Arabic Black", "Roman White", "Roman Black", "None"]
+        }
+
         Rectangle {
             Layout.fillWidth: true
             height: 1
@@ -239,96 +277,120 @@ KCM.SimpleKCM {
             spacing: Kirigami.Units.smallSpacing
 
             Repeater {
-                model: root.activitiesModel
+                model: root.sortedActivitiesModel
 
                 delegate: RowLayout {
-                spacing: Kirigami.Units.gridUnit * 0.5
-                
-                Kirigami.Icon {
-                    source: root.getActivityIcon(modelData, index)
-                    Layout.preferredWidth: Kirigami.Units.iconSizes.small
-                    Layout.preferredHeight: Kirigami.Units.iconSizes.small
-                }
-                
-                Label {
-                    text: actInfo.activityName(modelData) || "Unnamed Activity"
-                    Layout.fillWidth: true
-                    font.bold: true
-                }
-                
-                // Color customization group
-                RowLayout {
-                    spacing: Kirigami.Units.smallSpacing
-                    
-                    KQuickControls.ColorButton {
-                        id: colorPicker
-                        ToolTip.text: "Change button color"
-                        ToolTip.visible: hovered
-                        
-                        Component.onCompleted: {
-                            var c = root.getActivityColor(modelData);
-                            color = c ? c : "#ffffff";
-                        }
-                        
-                        onColorChanged: {
-                            root.updateActivityColor(modelData, color.toString());
-                        }
-                    }
-                    
-                    Button {
-                        text: "Reset Color"
-                        display: AbstractButton.IconOnly
-                        icon.name: "edit-clear"
-                        ToolTip.text: "Reset to default theme color"
-                        ToolTip.visible: hovered
-                        onClicked: {
-                            root.resetActivityColor(modelData);
-                            colorPicker.color = "#ffffff";
-                        }
-                    }
-                }
+                    spacing: Kirigami.Units.gridUnit * 0.5
 
-                // Separator between color and icon picker
-                Rectangle {
-                    width: 1
-                    height: Kirigami.Units.gridUnit
-                    color: Qt.rgba(1, 1, 1, 0.15)
-                }
+                    // Reorder buttons
+                    RowLayout {
+                        spacing: 2
 
-                // Icon customization group
-                RowLayout {
-                    spacing: Kirigami.Units.smallSpacing
-                    
-                    Button {
-                        id: iconSelectBtn
-                        ToolTip.text: "Change button icon"
-                        ToolTip.visible: hovered
-                        
-                        contentItem: Kirigami.Icon {
-                            source: root.getActivityIcon(modelData, index)
-                            implicitWidth: Kirigami.Units.iconSizes.small
-                            implicitHeight: Kirigami.Units.iconSizes.small
+                        Button {
+                            display: AbstractButton.IconOnly
+                            icon.name: "go-up"
+                            text: "↑"
+                            enabled: index > 0
+                            ToolTip.text: "Move up"
+                            ToolTip.visible: hovered
+                            onClicked: root.moveActivity(index, index - 1)
                         }
-                        
-                        onClicked: {
-                            iconDialog.targetActivityId = modelData;
-                            iconDialog.open();
+
+                        Button {
+                            display: AbstractButton.IconOnly
+                            icon.name: "go-down"
+                            text: "↓"
+                            enabled: index < root.sortedActivitiesModel.length - 1
+                            ToolTip.text: "Move down"
+                            ToolTip.visible: hovered
+                            onClicked: root.moveActivity(index, index + 1)
                         }
                     }
-                    
-                    Button {
-                        display: AbstractButton.IconOnly
-                        icon.name: "edit-clear"
-                        ToolTip.text: "Reset to default activity icon"
-                        ToolTip.visible: hovered
-                        onClicked: {
-                            root.resetActivityIcon(modelData);
-                            // Force refresh of the icon button display
-                            iconSelectBtn.contentItem.source = root.getActivityIcon(modelData, index);
+
+                    Kirigami.Icon {
+                        source: root.getActivityIcon(modelData, index)
+                        Layout.preferredWidth: Kirigami.Units.iconSizes.small
+                        Layout.preferredHeight: Kirigami.Units.iconSizes.small
+                    }
+
+                    Label {
+                        text: actInfo.activityName(modelData) || "Unnamed Activity"
+                        Layout.fillWidth: true
+                        font.bold: true
+                    }
+
+                    // Color customization group
+                    RowLayout {
+                        spacing: Kirigami.Units.smallSpacing
+
+                        KQuickControls.ColorButton {
+                            id: colorPicker
+                            ToolTip.text: "Change button color"
+                            ToolTip.visible: hovered
+
+                            Component.onCompleted: {
+                                var c = root.getActivityColor(modelData);
+                                color = c ? c : "#ffffff";
+                            }
+
+                            onColorChanged: {
+                                root.updateActivityColor(modelData, color.toString());
+                            }
+                        }
+
+                        Button {
+                            text: "Reset Color"
+                            display: AbstractButton.IconOnly
+                            icon.name: "edit-clear"
+                            ToolTip.text: "Reset to default theme color"
+                            ToolTip.visible: hovered
+                            onClicked: {
+                                root.resetActivityColor(modelData);
+                                colorPicker.color = "#ffffff";
+                            }
+                        }
+                    }
+
+                    // Separator between color and icon picker
+                    Rectangle {
+                        width: 1
+                        height: Kirigami.Units.gridUnit
+                        color: Qt.rgba(1, 1, 1, 0.15)
+                    }
+
+                    // Icon customization group
+                    RowLayout {
+                        spacing: Kirigami.Units.smallSpacing
+
+                        Button {
+                            id: iconSelectBtn
+                            ToolTip.text: "Change button icon"
+                            ToolTip.visible: hovered
+
+                            contentItem: Kirigami.Icon {
+                                source: root.getActivityIcon(modelData, index)
+                                implicitWidth: Kirigami.Units.iconSizes.small
+                                implicitHeight: Kirigami.Units.iconSizes.small
+                            }
+
+                            onClicked: {
+                                iconDialog.targetActivityId = modelData;
+                                iconDialog.open();
+                            }
+                        }
+
+                        Button {
+                            display: AbstractButton.IconOnly
+                            icon.name: "edit-clear"
+                            ToolTip.text: "Reset to default activity icon"
+                            ToolTip.visible: hovered
+                            onClicked: {
+                                root.resetActivityIcon(modelData);
+                                iconSelectBtn.contentItem.source = root.getActivityIcon(modelData, index);
+                            }
                         }
                     }
                 }
-            }
             }
         }
     }

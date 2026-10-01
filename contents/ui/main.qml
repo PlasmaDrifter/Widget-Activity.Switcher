@@ -67,6 +67,7 @@ PlasmoidItem {
 
     // Parse custom activity icon
     function getActivityIcon(id, index) {
+        // 1. Custom explicitly assigned icons always override
         try {
             var icons = JSON.parse(Plasmoid.configuration.activityIcons);
             if (icons && icons[id] !== undefined && icons[id] !== "") {
@@ -74,12 +75,34 @@ PlasmoidItem {
             }
         } catch (e) {}
         
-        if (index === 0) {
-            return Qt.resolvedUrl("1.svg");
-        } else if (index === 1) {
-            return Qt.resolvedUrl("2.svg");
+        // 2. Default Icon Style sets
+        var style = Plasmoid.configuration.defaultIconStyle;
+        
+        if (style === 0 && index >= 0 && index < 9) {
+            // Bubbles White (1.svg - 9.svg)
+            return Qt.resolvedUrl((index + 1) + ".svg");
+        } else if (style === 1 && index >= 0 && index < 9) {
+            // Bubbles Black (1.svg - 9.svg)
+            return Qt.resolvedUrl("icons/bubbles/black/" + (index + 1) + ".svg");
+        } else if (style === 2 && index >= 0 && index < 9) {
+            // Arabic White (1.png - 9.png)
+            return Qt.resolvedUrl("icons/arabic/white/" + (index + 1) + ".png");
+        } else if (style === 3 && index >= 0 && index < 9) {
+            // Arabic Black (1.png - 9.png)
+            return Qt.resolvedUrl("icons/arabic/black/" + (index + 1) + ".png");
+        } else if (style === 4 && index >= 0 && index < 9) {
+            // Roman White (I.png - IX.png)
+            var roman = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"];
+            return Qt.resolvedUrl("icons/roman/white/" + roman[index] + ".png");
+        } else if (style === 5 && index >= 0 && index < 9) {
+            // Roman Black (I.png - IX.png)
+            var roman = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"];
+            return Qt.resolvedUrl("icons/roman/black/" + roman[index] + ".png");
+        } else if (style === 6) {
+            // None - fall through to fallback
         }
         
+        // 3. Fallback to system default
         return actInfo.activityIcon(id) || "activities";
     }
 
@@ -98,21 +121,47 @@ PlasmoidItem {
 
     property var activitiesModel: []
 
+    function updateActivitiesModel() {
+        var current = actInfo.runningActivities();
+        if (!current) {
+            root.activitiesModel = [];
+            return;
+        }
+        try {
+            var order = JSON.parse(Plasmoid.configuration.customSortOrder || "[]");
+            if (order && order.length > 0) {
+                current.sort(function(a, b) {
+                    var idxA = order.indexOf(a);
+                    var idxB = order.indexOf(b);
+                    if (idxA === -1) idxA = 999;
+                    if (idxB === -1) idxB = 999;
+                    return idxA - idxB;
+                });
+            }
+        } catch (e) {}
+        var processed = (Plasmoid.configuration.reverseOrder ? current.slice().reverse() : current);
+        if (JSON.stringify(root.activitiesModel) !== JSON.stringify(processed)) {
+            root.activitiesModel = processed;
+        }
+    }
+
+    Connections {
+        target: Plasmoid.configuration
+        function onCustomSortOrderChanged() {
+            root.updateActivitiesModel();
+        }
+    }
+
     TaskManager.ActivityInfo {
         id: actInfo
-        Component.onCompleted: root.activitiesModel = actInfo.runningActivities()
+        Component.onCompleted: root.updateActivitiesModel()
     }
 
     Timer {
-        interval: 5000
+        interval: 3000
         running: true
         repeat: true
-        onTriggered: {
-            var current = actInfo.runningActivities();
-            if (JSON.stringify(root.activitiesModel) !== JSON.stringify(current)) {
-                root.activitiesModel = current;
-            }
-        }
+        onTriggered: root.updateActivitiesModel()
     }
 
     Loader {
@@ -156,7 +205,8 @@ PlasmoidItem {
         
         Rectangle {
             id: activityBtn
-            
+            clip: true
+
             readonly property string activityId: modelData
             readonly property bool isCurrent: actInfo.currentActivity === activityId
             readonly property color customColor: root.getActivityColor(activityId)
@@ -223,17 +273,30 @@ PlasmoidItem {
             }
             border.width: 1
 
-            RowLayout {
-                anchors.centerIn: parent
-                width: Math.min(parent.width - Kirigami.Units.smallSpacing * 2, implicitWidth)
-                spacing: Kirigami.Units.smallSpacing
+            Item {
+                id: contentContainer
+                // GPU caching for smooth sub-pixel translation
+                layer.enabled: true
+                layer.smooth: true
+                
+                // Fixed content width to prevent layout recalculation during animation
+                width: (btnIcon.visible ? btnIcon.width : 0) + (btnLabel.visible && btnIcon.visible ? Kirigami.Units.smallSpacing : 0) + (btnLabel.visible ? btnLabel.implicitWidth : 0)
+                height: parent.height
+                
+                // Explicit float binding to avoid pixel snapping
+                x: (parent.width - width) / 2
+                y: (parent.height - height) / 2
 
                 Kirigami.Icon {
                     id: btnIcon
+                    anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+                    
+                    width: Plasmoid.configuration.showIcons ? Kirigami.Units.iconSizes.small : 0
+                    height: Plasmoid.configuration.showIcons ? Kirigami.Units.iconSizes.small : 0
                     source: root.getActivityIcon(activityBtn.activityId, index)
-                    Layout.preferredWidth: Plasmoid.configuration.showIcons ? Kirigami.Units.iconSizes.small : 0
-                    Layout.preferredHeight: Plasmoid.configuration.showIcons ? Kirigami.Units.iconSizes.small : 0
                     visible: Plasmoid.configuration.showIcons
+
                     color: {
                         if (activityBtn.isCurrent) {
                             return Kirigami.Theme.highlightedTextColor;
@@ -249,9 +312,16 @@ PlasmoidItem {
 
                 Label {
                     id: btnLabel
+                    anchors.left: btnIcon.visible ? btnIcon.right : parent.left
+                    anchors.leftMargin: btnIcon.visible ? Kirigami.Units.smallSpacing : 0
+                    anchors.verticalCenter: parent.verticalCenter
+                    
                     text: actInfo.activityName(activityBtn.activityId) || "Unnamed Activity"
-                    Layout.fillWidth: Plasmoid.configuration.layoutOrientation === 0
                     visible: Plasmoid.configuration.showNames && Plasmoid.configuration.buttonShape !== 2
+                    
+                    width: implicitWidth
+                    horizontalAlignment: Text.AlignLeft
+                    renderType: Text.QtRendering
                     font.bold: activityBtn.isCurrent
                     color: {
                         if (activityBtn.isCurrent) {
@@ -264,11 +334,8 @@ PlasmoidItem {
                             }
                         }
                     }
-                    elide: Text.ElideRight
-                    horizontalAlignment: Text.AlignLeft
                 }
             }
-
             MouseArea {
                 id: activityMouseArea
                 anchors.fill: parent
