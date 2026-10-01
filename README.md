@@ -15,7 +15,7 @@ A sleek, modern pill-shaped workspace Activity Switcher widget for KDE Plasma 6.
 ## Previews
 
 ![Desktop Activities Switcher Demo](screenshots/desktop.gif)
-![Pill Activities Switcher Screenshot 1](screenshots/Screenshot_20260711_083426.png)
+![Pill Activities Switcher Settings](screenshots/Screenshot_20260711_083426.png)
 ![Pill Activities Switcher Animated Demo 1](screenshots/output.gif)
 ![Pill Activities Switcher Animated Demo 2](screenshots/output2.gif)
 
@@ -27,6 +27,9 @@ A sleek, modern pill-shaped workspace Activity Switcher widget for KDE Plasma 6.
 - **One-click**: switching between active activity spaces
 - **Dynamic**: active state highlighting
 - **Compact**: panel and desktop widget modes
+- **Icon Themes**: multiple built-in numeral styles including Bubbles (White and Black SVGs), Arabic (White and Black), and Roman (White and Black)
+- **Activity Reordering**: easily reorder activities up or down directly within settings
+- **Custom Styling**: per-activity colors, individual icon selection, adjustable unselected opacity, sizing ratios, and shapes (Pill, Rectangle, Rounded Rectangle, Circle)
 
 ## Requirements
 
@@ -55,8 +58,8 @@ Then right-click your desktop or panel $\rightarrow$ **Add Widgets...** and sear
 
 ---
 
-## 💬 Community & Discussions
+## Community & Discussions
 
 Got questions, setup ideas, or feedback?
 
-* 🌐 Join our subreddit at [**r/PlasmaDrifterProjects**](https://reddit.com/r/PlasmaDrifterProjects) to discuss updates, get support, and share configurations.
+* Join our subreddit at [**r/PlasmaDrifterProjects**](https://reddit.com/r/PlasmaDrifterProjects) to discuss updates, get support, and share configurations.
