@@ -51,6 +51,28 @@ kpackagetool6 -i ~/.local/share/plasma/plasmoids/local.widget.activities.switche
 
 Then right-click your desktop or panel $\rightarrow$ **Add Widgets...** and search for the widget name.
 
+## Updating
+
+### Option 1: Git Pull
+```bash
+cd ~/.local/share/plasma/plasmoids/local.widget.activities.switcher
+git pull
+```
+
+### Option 2: Plasma Package Tool
+If updating from a downloaded `.plasmoid` package file:
+```bash
+kpackagetool6 -t Plasma/Applet -u local.widget.activities.switcher.plasmoid
+```
+
+To reload changes immediately in KDE Plasma 6:
+```bash
+systemctl --user restart plasma-plasmashell.service
+```
+*(Or log out and log back in)*
+
+---
+
 ## Credits & License
 
 - **Author / Maintainer**: PlasmaDrifter
