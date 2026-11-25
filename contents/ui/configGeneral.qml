@@ -23,6 +23,7 @@ KCM.SimpleKCM {
     property alias cfg_sizeRatio: sizeRatioSlider.value
     property alias cfg_animationDuration: animationDurationSpinBox.value
     property alias cfg_defaultIconStyle: defaultIconStyleComboBox.currentIndex
+    property alias cfg_reverseOrder: reverseOrderCheckbox.checked
     property string cfg_activityColors
     property string cfg_activityIcons
     property string cfg_customSortOrder
@@ -50,13 +51,13 @@ KCM.SimpleKCM {
     TaskManager.ActivityInfo {
         id: actInfo
         Component.onCompleted: root.activitiesModel = actInfo.runningActivities()
-    }
-
-    Timer {
-        interval: 1000
-        running: true
-        repeat: true
-        onTriggered: {
+        onNumberOfRunningActivitiesChanged: {
+            var current = actInfo.runningActivities();
+            if (JSON.stringify(root.activitiesModel) !== JSON.stringify(current)) {
+                root.activitiesModel = current;
+            }
+        }
+        onNamesOfRunningActivitiesChanged: {
             var current = actInfo.runningActivities();
             if (JSON.stringify(root.activitiesModel) !== JSON.stringify(current)) {
                 root.activitiesModel = current;
@@ -263,6 +264,12 @@ KCM.SimpleKCM {
             model: ["Bubbles White", "Bubbles Black", "Arabic White", "Arabic Black", "Roman White", "Roman Black", "None"]
         }
 
+        CheckBox {
+            id: reverseOrderCheckbox
+            Kirigami.FormData.label: "Reverse Order:"
+            text: "Reverse the order of activity buttons"
+        }
+
         Rectangle {
             Layout.fillWidth: true
             height: 1
@@ -325,16 +332,20 @@ KCM.SimpleKCM {
 
                         KQuickControls.ColorButton {
                             id: colorPicker
+                            property bool colorInitialized: false
                             ToolTip.text: "Change button color"
                             ToolTip.visible: hovered
 
                             Component.onCompleted: {
                                 var c = root.getActivityColor(modelData);
                                 color = c ? c : "#ffffff";
+                                colorInitialized = true;
                             }
 
                             onColorChanged: {
-                                root.updateActivityColor(modelData, color.toString());
+                                if (colorInitialized) {
+                                    root.updateActivityColor(modelData, color.toString());
+                                }
                             }
                         }
 
@@ -345,16 +356,18 @@ KCM.SimpleKCM {
                             ToolTip.text: "Reset to default theme color"
                             ToolTip.visible: hovered
                             onClicked: {
-                                root.resetActivityColor(modelData);
+                                colorPicker.colorInitialized = false;
                                 colorPicker.color = "#ffffff";
+                                colorPicker.colorInitialized = true;
+                                root.resetActivityColor(modelData);
                             }
                         }
                     }
 
                     // Separator between color and icon picker
                     Rectangle {
-                        width: 1
-                        height: Kirigami.Units.gridUnit
+                        Layout.preferredWidth: 1
+                        Layout.preferredHeight: Kirigami.Units.gridUnit
                         color: Qt.rgba(1, 1, 1, 0.15)
                     }
 

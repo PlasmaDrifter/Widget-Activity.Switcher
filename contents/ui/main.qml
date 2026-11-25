@@ -1,58 +1,38 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
+import org.kde.activities as Activities
 import org.kde.plasma.plasmoid
 import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.components as PlasmaComponents
-import org.kde.plasma.plasma5support as Plasma5Support
 import org.kde.taskmanager as TaskManager
 import org.kde.kirigami as Kirigami
 
 PlasmoidItem {
     id: root
-    // Detected at startup: "qdbus6" on Qt6 distros, "qdbus" on Qt5
-    property string qdbusCmd: "qdbus6"
 
-    Plasma5Support.DataSource {
-        id: qdbusDetect
-        engine: "executable"
-        connectedSources: []
-        onNewData: function(source, data) {
-            disconnectSource(source)
-            var out = data["stdout"].trim()
-            if (out === "") {
-                root.qdbusCmd = "qdbus"
-            }
-        }
-        Component.onCompleted: {
-            connectSource("which qdbus6")
-        }
-    }
-    // Dynamic sizing for panel integration using Layout properties
-    Layout.preferredWidth: {
+    implicitWidth: {
         if (Plasmoid.configuration.layoutOrientation === 0) {
-            // Stacked: width of circles is buttonHeight. Others can expand 30%, so max width is buttonWidth * 1.3
             if (Plasmoid.configuration.buttonShape === 2) {
                 return Plasmoid.configuration.buttonHeight + Kirigami.Units.gridUnit;
             }
             return Plasmoid.configuration.buttonWidth * Plasmoid.configuration.sizeRatio + Kirigami.Units.gridUnit;
-        } else {
-            return layoutLoader.item ? layoutLoader.item.implicitWidth : Kirigami.Units.gridUnit * 10;
         }
+        var hItem = layoutLoader.item as Item;
+        return hItem ? hItem.implicitWidth : Kirigami.Units.gridUnit * 10;
     }
-    Layout.preferredHeight: {
+    implicitHeight: {
         if (Plasmoid.configuration.layoutOrientation === 0) {
-            return layoutLoader.item ? layoutLoader.item.implicitHeight : Kirigami.Units.gridUnit * 5;
-        } else {
-            return Plasmoid.configuration.buttonHeight + Kirigami.Units.gridUnit * 0.5;
+            var vItem = layoutLoader.item as Item;
+            return vItem ? vItem.implicitHeight : Kirigami.Units.gridUnit * 5;
         }
+        return Plasmoid.configuration.buttonHeight + Kirigami.Units.gridUnit * 0.5;
     }
 
+    Layout.preferredWidth: implicitWidth
+    Layout.preferredHeight: implicitHeight
     Layout.minimumWidth: 10
     Layout.minimumHeight: 10
-
-    implicitWidth: Layout.preferredWidth
-    implicitHeight: Layout.preferredHeight
     
     // Parse custom activity color
     function getActivityColor(id) {
@@ -106,17 +86,8 @@ PlasmoidItem {
         return actInfo.activityIcon(id) || "activities";
     }
 
-    // Executable data source for DBus switching commands
-    Plasma5Support.DataSource {
-        id: execSource
-        engine: "executable"
-        connectedSources: []
-        onNewData: function(source, data) {
-            disconnectSource(source)
-        }
-        function run(cmd) {
-            connectSource(cmd)
-        }
+    Activities.ActivityModel {
+        id: activityController
     }
 
     property var activitiesModel: []
@@ -150,18 +121,16 @@ PlasmoidItem {
         function onCustomSortOrderChanged() {
             root.updateActivitiesModel();
         }
+        function onReverseOrderChanged() {
+            root.updateActivitiesModel();
+        }
     }
 
     TaskManager.ActivityInfo {
         id: actInfo
         Component.onCompleted: root.updateActivitiesModel()
-    }
-
-    Timer {
-        interval: 3000
-        running: true
-        repeat: true
-        onTriggered: root.updateActivitiesModel()
+        onNumberOfRunningActivitiesChanged: root.updateActivitiesModel()
+        onNamesOfRunningActivitiesChanged: root.updateActivitiesModel()
     }
 
     Loader {
@@ -209,8 +178,9 @@ PlasmoidItem {
 
             readonly property string activityId: modelData
             readonly property bool isCurrent: actInfo.currentActivity === activityId
-            readonly property color customColor: root.getActivityColor(activityId)
-            readonly property bool hasCustomColor: customColor.toString() !== "" && customColor.toString() !== "#000000"
+            readonly property string customColorStr: root.getActivityColor(activityId)
+            readonly property bool hasCustomColor: customColorStr !== ""
+            readonly property color customColor: hasCustomColor ? customColorStr : Kirigami.Theme.highlightColor
 
             readonly property bool canExpand: Plasmoid.configuration.buttonShape !== 2 // Circles don't expand to ovals
 
@@ -275,10 +245,7 @@ PlasmoidItem {
 
             Item {
                 id: contentContainer
-                // GPU caching for smooth sub-pixel translation
-                layer.enabled: true
-                layer.smooth: true
-                
+
                 // Fixed content width to prevent layout recalculation during animation
                 width: (btnIcon.visible ? btnIcon.width : 0) + (btnLabel.visible && btnIcon.visible ? Kirigami.Units.smallSpacing : 0) + (btnLabel.visible ? btnLabel.implicitWidth : 0)
                 height: parent.height
@@ -342,11 +309,7 @@ PlasmoidItem {
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
-                    // Debug: log (plasmashell --replace &)
-                    console.log("Pill clicked! Activity ID: " + activityBtn.activityId + " Name: " + actInfo.activityName(activityBtn.activityId))
-                    
-                    //switch the activity
-                    execSource.run(root.qdbusCmd + ' org.kde.ActivityManager /ActivityManager/Activities SetCurrentActivity "' + activityBtn.activityId + '"')
+                    activityController.setCurrentActivity(activityBtn.activityId, function() {})
                 }
             }
 
